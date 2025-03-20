@@ -16,8 +16,8 @@ opening_phase = 15
 end_game = 35
 
 # Token di accesso per il dataset di HuggingFace
-token = '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'
-login(token=token)
+# token = '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'
+# login(token=token)
 
 
 # Carica in locale il dataset prima del training
