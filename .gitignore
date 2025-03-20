@@ -1,3 +1,7 @@
 datasets/
 
 hugging_face_token.py
+
+model/
+outputs/
+unsloth_compiled_cache/
