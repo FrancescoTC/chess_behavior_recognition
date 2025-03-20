@@ -2,19 +2,15 @@ from unsloth import FastVisionModel
 from datasets import Dataset, concatenate_datasets
 import evaluating
 
-dataset_location = "middle"
+dataset_location = "end"
 print("Loading the dataset")
-dataset = Dataset.load_from_disk('/workspace/datasets/middle/test')
+dataset = Dataset.load_from_disk('/workspace/datasets/' + dataset_location + '/test')
 
-ds1 = dataset.filter(lambda example: example['player'] == 'Nakamura')
-ds1 = ds1.select(range(7700))
-
-ds2 = dataset.filter(lambda example: example['player'] == 'Capablanca')
+ds = dataset['test']
 
 model, tokenizer = FastVisionModel.from_pretrained(
-    model_name = "model/middle/lora_model", # YOUR MODEL YOU USED FOR TRAINING
+    model_name = "model/" + dataset_location + "/lora_model", # YOUR MODEL YOU USED FOR TRAINING
     load_in_4bit = True, # Set to False for 16bit LoRA
 )
 FastVisionModel.for_inference(model)
-evaluating.evaluate(ds1, model, tokenizer, '/workspace/models/middle/')
-evaluating.evaluate(ds2, model, tokenizer, '/workspace/models/middle/')
+evaluating.evaluate(ds, model, tokenizer, '/workspace/' + dataset_location + '/middle/')
