@@ -15,12 +15,7 @@ min_len = 3
 opening_phase = 15
 end_game = 35
 
-# Token di accesso per il dataset di HuggingFace
-# token = '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'
-# login(token=token)
-
-
-# Carica in locale il dataset prima del training
+# hugging_face_token
 
 # Carico il dataset
 ds = load_dataset('FrancescoTC/chess_game')
