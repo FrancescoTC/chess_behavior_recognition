@@ -1,13 +1,17 @@
+import unsloth
+from vllm import LLM
+from vllm.sampling_params import SamplingParams
 from datasets import Dataset, DatasetDict
 from unsloth import UnslothVisionDataCollator, FastVisionModel, is_bf16_supported
 from trl import SFTTrainer, SFTConfig
+import torch
 import sys
 import io
 import os
 
 from train import DynamicDataset, convert_to_conversation
 
-game_state = 'end'
+game_state = 'middle'
 dataset_location = '/workspace/datasets/' + game_state
 
 print("Loading the dataset")
@@ -21,11 +25,20 @@ ds = dataset['train']
 
 path = '/workspace/model/' + game_state + '/'
 
-print("loading unsloth/Llama-3.2") 
+print("Cleaning up GPUs")
+torch.cuda.empty_cache()
+
+
+model_name = "mistralai/Pixtral-12B-2409"
+# model_name = "google/gemma-3-27b-it"
+model_name="Qwen/Qwen2.5-VL-7B-Instruct"
+# model_name = "unsloth/Llama-3.2-11B-Vision-Instruct"
+
+print("loading " + model_name) 
 model, tokenizer = FastVisionModel.from_pretrained(
-    "unsloth/Llama-3.2-11B-Vision-Instruct",
+    model_name,
     load_in_4bit = True, # Use 4bit to reduce memory use. False for 16bit LoRA.
-    use_gradient_checkpointing = "unsloth", # True or "unsloth" for long context
+    use_gradient_checkpointing = True, # True or "unsloth" for long context
 )
 
 model = FastVisionModel.get_peft_model(
@@ -57,8 +70,8 @@ trainer = SFTTrainer(
     data_collator = UnslothVisionDataCollator(model, tokenizer),
     train_dataset = dynamic_dataset,
     args = SFTConfig(
-        per_device_train_batch_size = 2,    # each GPUs processes 2 samples per step
-        gradient_accumulation_steps = 4,    # combines gradients from 4 batches before updating weights
+        per_device_train_batch_size = 3,    # each GPUs processes 2 samples per step
+        gradient_accumulation_steps = 6,    # combines gradients from 4 batches before updating weights
         warmup_steps = 100,                 # Warmup steps for stability
         max_steps = 2000,                   # Total optimization steps
         num_train_epochs = 3,
@@ -85,5 +98,7 @@ print("start training")
 trainer.train()
 
 print("saving model and tokenizer")
-model.save_pretrained(path + "/lora_model")
-tokenizer.save_pretrained(path + "/lora_model")
+model.save_pretrained(path + "/Qwen/" +  "/lora_model")
+tokenizer.save_pretrained(path + "/Qwen"  + "/lora_model")
+
+
