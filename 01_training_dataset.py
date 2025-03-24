@@ -29,7 +29,7 @@ print("Cleaning up GPUs")
 torch.cuda.empty_cache()
 
 
-model_name = "mistralai/Pixtral-12B-2409"
+# model_name = "mistralai/Pixtral-12B-2409"
 # model_name = "google/gemma-3-27b-it"
 model_name="Qwen/Qwen2.5-VL-7B-Instruct"
 # model_name = "unsloth/Llama-3.2-11B-Vision-Instruct"

@@ -12,6 +12,7 @@ from trl import SFTTrainer, SFTConfig
 from transformers import TextStreamer
 
 import os
+import csv
 
 def extract_player_name(output):
     # Split the output by spaces and get the last element
@@ -35,7 +36,8 @@ def convert_to_conversation(sample):
     return { "messages" : conversation }
 pass
 
-def evaluate(dataset, model, tokenizer, file_dir):
+def evaluate(dataset, model, tokenizer, file_dir, model_name):
+    
     model.eval() # Set the model to evaluation mode
     correct, total = 0, 0
     text_streamer = TextStreamer(tokenizer, skip_prompt=True) # Create a TextStreamer for output streaming
@@ -64,7 +66,9 @@ def evaluate(dataset, model, tokenizer, file_dir):
                 add_special_tokens=False,
                 return_tensors="pt",
             ).to("cuda")  # Move to GPU if available
-            # Generate predictions
+            
+            # if "token_type_ids" in inputs:
+            #     del inputs["token_type_ids"]
             output = model.generate(
                 **inputs,
                 streamer=text_streamer,
@@ -84,6 +88,11 @@ def evaluate(dataset, model, tokenizer, file_dir):
             correct += (predicted_player == actual_player)  # Compare with the actual player
             print(f'\tActual Player:\t{actual_player}')
             print(f'\tcorrect/total:\t{correct}/{total}')
+            new_row = predicted_player + ',' + actual_player
+            new_row = [predicted_player, actual_player]
+            with open(model_name + "_res.csv", mode="a", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(new_row)
 
     # Calculate accuracy
     accuracy = correct / total if total > 0 else 0
