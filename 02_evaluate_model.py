@@ -9,11 +9,19 @@ dataset = Dataset.load_from_disk('/workspace/datasets/' + dataset_location + '/t
 ds = dataset
 
 model, tokenizer = FastVisionModel.from_pretrained(
-    model_name = "model/middle/Qwen/lora_model", # YOUR MODEL YOU USED FOR TRAINING
+    model_name = "model/middle/qwen/lora_model", # YOUR MODEL YOU USED FOR TRAINING
     load_in_4bit = True, # Set to False for 16bit LoRA
 )
 FastVisionModel.for_inference(model)
-evaluating.evaluate(ds, model, tokenizer, '/workspace/' + dataset_location + '/middle/', 'mistral')
+
+masters = ['Morphy', 'Fischer', 'Kasparov']
+
+for gm in masters:
+    ds_filtered = ds.filter(lambda x: x["player"] == gm)[:2000]
+    ds_filtered = Dataset.from_dict(ds_filtered)
+    evaluating.evaluate(ds_filtered, model, tokenizer, '/workspace/' + dataset_location + '/middle/', 'qwen_2')
+
+
 
 # Carlsen
 # 

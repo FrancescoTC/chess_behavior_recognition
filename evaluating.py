@@ -36,11 +36,12 @@ def convert_to_conversation(sample):
     return { "messages" : conversation }
 pass
 
-def evaluate(dataset, model, tokenizer, file_dir, model_name):
+def evaluate(dataset, model, tokenizer, model_name):
     
     model.eval() # Set the model to evaluation mode
     correct, total = 0, 0
     text_streamer = TextStreamer(tokenizer, skip_prompt=True) # Create a TextStreamer for output streaming
+    
     with torch.no_grad(): # Disable gradient calculation for evaluation
         for sample in dataset:  # Assuming dataset_test is your test dataset
             # Extract the image and other relevant information
@@ -96,8 +97,4 @@ def evaluate(dataset, model, tokenizer, file_dir, model_name):
 
     # Calculate accuracy
     accuracy = correct / total if total > 0 else 0
-    accuracy_text = f'Accuracy: {accuracy * 100:.2f}%'
-
-    os.makedirs(file_dir, exist_ok=True)
-    with open(file_dir + 'accuracy_output.txt', 'w') as file:
-        file.write(accuracy_text)
+    print(f'Accuracy: {accuracy * 100:.2f}%')
