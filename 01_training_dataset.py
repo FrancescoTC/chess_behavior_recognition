@@ -97,7 +97,7 @@ def main():
     print(dataset)
 
     FastVisionModel.for_inference(model)
-    evaluating.evaluate(ds_filtered, model, tokenizer, '/workspace/' + dataset_location + '/middle/', short_mn)
+    evaluating.evaluate(dataset, model, tokenizer, short_mn)
 
     
 
