@@ -9,3 +9,7 @@ unsloth_compiled_cache/
 __pycache__/
 
 how_to_build_it.txt
+
+pgn2png/data/
+pgn2png/imagefolder_dataset/
+pgn2png/old/
