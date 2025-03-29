@@ -1,4 +1,15 @@
 import csv
+from enum import Enum
+
+class Pieces(Enum):
+    '''
+    Enum that rappresent the pieces value
+    '''
+    R = 5
+    B = 3
+    N = 3
+    Q = 9
+    P = 1
 
 def check_if_is_openings(fen: str) -> bool:
     '''
@@ -23,4 +34,23 @@ def check_if_is_openings(fen: str) -> bool:
         if opening['FEN'] == fen:
             return True
     return False
+
+def get_non_pawn_materials(fen: str) -> int:
+    '''
+    From a FEN get the value of the non pawn materials
+    
+    Input:
+        fen: str -> the FEN of the position
+    Output:
+        int -> the materials value of the non-pawn pieces
+    '''
+    material = 0
+    for char in fen:
+        try:
+            if char in Pieces.__members__:
+                material += Pieces[char.upper()].value
+        except KeyError:
+            continue
+    print(material)
+    return material
 
