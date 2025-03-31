@@ -1,6 +1,5 @@
-import utils as ig
-
-from utils import get_move_number, extract_first_n_move
+from utils import get_move_number, extract_first_n_move, make_dir, extract_moves_from_pgn, board2png, save_data_as_json
+from phase_manager import check_if_is_openings, get_non_pawn_materials
 
 from pathlib import Path
 import chess
@@ -8,6 +7,7 @@ from datasets import Dataset, DatasetDict
 import os
 import json
 import shutil
+import sys
 
 def make_subdir_name(index: int, dir: str) -> str :
   '''
@@ -44,20 +44,26 @@ def dataset_convertor(name: str, dir_name: str, ds: Dataset):
     ds: Dataset -> the original dataset
   '''
   
-  ig.make_dir(Path(dir_name))
+  make_dir(Path(dir_name))
   index = 1
   print(name)
+  
+  end_game_threshold = 38
 
   for data in ds:
     print(f'{index} out of {len(ds)}')
     sub_dir = make_subdir_name(index, dir_name)
-    ig.make_dir(Path(sub_dir))
-    ig.save_data_as_json(sub_dir, data['site'], data['opponent'], data['is_white_master'], data['result'], data['game'], index)
+    make_dir(Path(sub_dir))
     
     player_move = 0 if data['is_white_master'] else 1
     board = chess.Board()
-    moves = ig.extract_moves_from_pgn(data['game'])
+    moves = extract_moves_from_pgn(data['game'])
     move_index = 0
+    
+    opening_phase = 1
+    end_phase = sys.maxsize
+    
+    non_pawn_material = 0
 
     for move in moves:
       if player_move == 0:
@@ -66,10 +72,21 @@ def dataset_convertor(name: str, dir_name: str, ds: Dataset):
         img_name = sub_dir + '/move_' + m + '.png'
       
       board.push(move)
+      if move_index < 12:
+        if check_if_is_openings(board.fen()):
+          opening_phase = move_index
+      elif end_phase == sys.maxsize:
+        non_pawn_material = get_non_pawn_materials(board.fen())
+        if non_pawn_material <= end_game_threshold:
+          end_phase = move_index
       if player_move == 0:
-        ig.board2png(board=board, destination=img_name, lastmove=str(move))
+        board2png(board=board, destination=img_name, lastmove=str(move))
 
       player_move = 1 if player_move == 0 else 0
+      
+    
+    save_data_as_json(sub_dir, data['site'], data['opponent'], data['is_white_master'], data['result'], data['game'], index, opening_phase, end_phase)
+      
     
     index += 1
     
@@ -116,7 +133,9 @@ def normalize_data(base_dir):
                         "result": metadata["result"],
                         "game": game,
                         "split": split,
-                        "game_id": instance_folder
+                        "game_id": instance_folder,
+                        "opening": metadata['opening'],
+                        "end_phase": metadata['end_phase']
                    })
                    
    return normalized_data
@@ -150,7 +169,9 @@ def create_flat_imagefolder(normalized_data, output_dir):
                "result": item["result"],
                "game": item["game"], 
                "split": item['split'],
-               "game_id": item['game_id']
+               "game_id": item['game_id'],
+                "opening": item['opening'],
+                "end_phase": item['end_phase']
            }
        
        # Save metadata.jsonl

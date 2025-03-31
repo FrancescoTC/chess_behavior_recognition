@@ -156,7 +156,7 @@ def make_dir(path: Path):
   except Exception as e:
     print(f"An error occurred: {e}")
 
-def save_data_as_json(path: str, site: str, opponent: str, is_white_master: bool, result: str, game: str, index: int):
+def save_data_as_json(path: str, site: str, opponent: str, is_white_master: bool, result: str, game: str, index: int, opening: int, end_phase: int):
   '''
   Save the data as a JSON file
   
@@ -166,7 +166,10 @@ def save_data_as_json(path: str, site: str, opponent: str, is_white_master: bool
     opponent: str
     is_white_master: bool
     result: str
-    game: str
+    game: str,
+    game_id: int,
+    opening: int,
+    end: int
   '''
   d =  {
     "site": site,
@@ -174,7 +177,9 @@ def save_data_as_json(path: str, site: str, opponent: str, is_white_master: bool
     "is_white_master": is_white_master,
     "result": result,
     "game": game,
-    "game_id": index 
+    "game_id": index,
+    "opening": opening,
+    "end_phase": end_phase,
   }
   json_obj = json.dumps(d, indent=4)
   with open(path + "/data.json", "w") as outfile:
