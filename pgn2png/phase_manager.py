@@ -2,11 +2,20 @@ import csv
 from enum import Enum
 
 
-pieces = {
+white_pieces = {
     'R': 5,
     'B': 3,
     'N': 3,
-    'Q': 9
+    'Q': 9,
+    'P': 1
+}
+
+black_pieces = {
+    'r': 5,
+    'b': 3,
+    'n': 3,
+    'q': 9,
+    'p': 1
 }
 
 
@@ -34,24 +43,28 @@ def check_if_is_openings(fen: str) -> bool:
             return True
     return False
 
-def get_non_pawn_materials(fen: str) -> int:
+def check_if_is_endgame(fen: str) -> bool:
     '''
-    From a FEN get the value of the non-pawn materials. 
+    From a FEN, check if the position is considerable endgame. 
     The input fen could be the entire FEN (ex: "rn2qrk1/ppp4p/3b4/5p2/2NPpP2/P1P5/6PP/R1BQK2R w KQ - 1 15") 
     or only the pieces on the board (ex: "rn2qrk1/ppp4p/3b4/5p2/2NPpP2/P1P5/6PP/R1BQK2R").
     
     Input:
         fen: str -> the FEN of the position
     Output:
-        int -> the materials value of the non-pawn pieces
+        bool -> True if both players have at most 13 points of material each, False otherwise
     '''
-    material = 0
+    w_material = 0
+    b_material = 0
     for char in fen:
         if char == ' ':
-            return material
+            return (w_material <= 13) and (b_material <= 13) 
         try:
-            material = material + pieces[char.upper()]
+            if char.islower():
+                b_material = b_material + black_pieces[char]
+            elif char.isupper():
+                w_material = w_material + white_pieces[char]
         except KeyError:
             continue
-    return material 
+    return (w_material <= 13) and (b_material <= 13)
 

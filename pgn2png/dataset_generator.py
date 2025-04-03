@@ -1,5 +1,5 @@
 from utils import get_move_number, extract_first_n_move, make_dir, extract_moves_from_pgn, board2png, save_data_as_json
-from phase_manager import check_if_is_openings, get_non_pawn_materials
+from phase_manager import check_if_is_openings, check_if_is_endgame
 
 from pathlib import Path
 import chess
@@ -8,6 +8,8 @@ import os
 import json
 import shutil
 import sys
+
+MAX_OPENING_MOVES = 18 # file c.tsv, opening Ruy Lopez: Marshall Attack, Main Line, Spassky Variation
 
 def make_subdir_name(index: int, dir: str) -> str :
   '''
@@ -62,8 +64,6 @@ def dataset_convertor(name: str, dir_name: str, ds: Dataset):
     
     opening_phase = 1
     end_phase = sys.maxsize
-    
-    non_pawn_material = 0
 
     for move in moves:
       if player_move == 0:
@@ -72,12 +72,11 @@ def dataset_convertor(name: str, dir_name: str, ds: Dataset):
         img_name = sub_dir + '/move_' + m + '.png'
       
       board.push(move)
-      if move_index < 12:
+      if move_index < MAX_OPENING_MOVES:
         if check_if_is_openings(board.fen()):
           opening_phase = move_index
       elif end_phase == sys.maxsize:
-        non_pawn_material = get_non_pawn_materials(board.fen())
-        if non_pawn_material <= end_game_threshold:
+        if check_if_is_endgame(board.fen()):
           end_phase = move_index
       if player_move == 0:
         board2png(board=board, destination=img_name, lastmove=str(move))

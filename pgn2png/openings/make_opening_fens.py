@@ -33,7 +33,7 @@ def make_fens(input_file: str, output_file: str):
     
     Input:
         input_file: str -> the name of the TSV file that contains the PGN of the openings
-        output_file: str -> the name of the TSV file that will contain the FEN of the openings
+        output_file: str -> the name of the CSV file that will contain the FEN of the openings
     '''
     data = []
     print(input_file)
@@ -46,6 +46,26 @@ def make_fens(input_file: str, output_file: str):
         final_fen = get_fen(d['pgn'])
 
         with open(output_file, mode="a", newline="", encoding="utf-8") as file:
-            tsv_writer = csv.writer(file)
-            tsv_writer.writerow([final_fen, input_file])
+            csv_writer = csv.writer(file)
+            csv_writer.writerow([final_fen, input_file])
 
+def get_final_move(pgn: str) -> int:
+    moves = extract_moves_from_pgn(pgn)
+    return len(moves)/2
+
+def get_max_moves(input_file: str) -> int:
+    max_move = 0
+    name = ''
+    data = []
+    print(input_file)
+    with open(input_file, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file, delimiter="\t")
+        for row in reader:
+            data.append(dict(row))
+            
+    for d in data:
+        final_move = get_final_move(d['pgn'])
+        if final_move >= max_move:
+            max_move = final_move
+            name = d['name']
+    return max_move, name
