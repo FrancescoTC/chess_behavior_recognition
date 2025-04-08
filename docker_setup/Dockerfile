@@ -11,6 +11,7 @@ ENV APP_PATH=/app
 
 # Install general-purpose dependencies
 RUN apt-get update -y && \
+    apt-get upgrade -y && \
     apt-get install -y curl \
                        git \
                        bash \
