@@ -49,8 +49,6 @@ def dataset_convertor(name: str, dir_name: str, ds: Dataset):
   make_dir(Path(dir_name))
   index = 1
   print(name)
-  
-  end_game_threshold = 38
 
   for data in ds:
     print(f'{index} out of {len(ds)}')
@@ -84,7 +82,7 @@ def dataset_convertor(name: str, dir_name: str, ds: Dataset):
       player_move = 1 if player_move == 0 else 0
       
     
-    save_data_as_json(sub_dir, data['site'], data['opponent'], data['is_white_master'], data['result'], data['game'], index, opening_phase, end_phase)
+    save_data_as_json(sub_dir, data['site'], data['opponent'], data['is_white_master'], data['result'], data['game'].replace('\n', ' '), index, opening_phase, end_phase)
       
     
     index += 1

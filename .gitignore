@@ -13,3 +13,6 @@ how_to_build_it.txt
 pgn2png/data/
 pgn2png/imagefolder_dataset/
 pgn2png/old/
+parquet/
+dataset/
+tocken.txt
