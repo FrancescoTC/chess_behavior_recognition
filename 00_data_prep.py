@@ -1,53 +1,81 @@
-import gc
-
+import re
 from datasets import Dataset, DatasetDict, load_dataset
 from huggingface_hub import login
 
 '''
-Divisione partite in base alla lunghezza
-Considerazioni: Se una partita contiene solo le prime due mosse, molto spesso sono mosse molto comuni
-                già dalla terza mossa in poi emerge una preferenza per alcune aperture basata sul tipo di giocatore
-                La fase di apertura finisce in genere tra la 10 e la 15 mossa ma può arrivare anche alla mossa n.20
-                Una partita arriva all'end game quando non ci sono più molti pezzi, il re non è in pericolo di matto
-                e i pedoni diventano i protagonisti della partita. Questo accade in genere dopo le 35/40 mosse.
+Huggingface Token
 '''
-min_len = 3
-opening_phase = 15
-end_game = 35
 
-# hugging_face_token
+def extract_token():
+    file_path = 'token.txt'
+    with open(file_path, 'r') as f:
+        content = f.read()
+    
+    match = re.search(r'"(.*?)"', content)
+    if match:
+        return match.group(1)
+    else:
+        return None
 
-# Carico il dataset
-ds = load_dataset('FrancescoTC/chess_game')
 
-print(ds)
+def get_move_number(pgn_string: str) -> int:
+    '''
+    Get the number of move contained into a PGN string.
+    The PGN must has 2 strings separated by ' ' for each move.
+    
+    Input:
+        pgn_string: str -> the PGN that rappresent the game.
+    Output:
+        int -> the number of move in the pgn
+    '''
+    semi_in_move = 2
+    pgn = pgn_string.split(' ')
+    return int(len(pgn) / semi_in_move)
 
-# Divido i dati in 3 parti diverse in base alla durata delle partite.
+def phase_generation(ds: Dataset, master: str, phase: str):
+    '''
+    Create a sub dataset that contain games that are from the same phase.
+    
+    Input:
+        ds: Dataset -> the dataset that contain the game
+        master: str -> the name of the master (subdir in ChessMoE/master_games_w_screenshots)
+        phase: str -> the name of the phase (opening, middle, end)
+    '''
+    dataset = {'test': None, 'train': None}
 
-# Opening Phase
-dataset_opening = {'test': None, 'train': None}
-dataset_opening['test'] = ds['test'].filter(lambda e: e["game_len"] <= opening_phase and e['game_len'] >= min_len)
-dataset_opening['train'] = ds['train'].filter(lambda e: e["game_len"] <= opening_phase and e['game_len'] >= min_len)
-dataset_opening = DatasetDict(dataset_opening)
-dataset_opening.save_to_disk('/workspace/datasets/opening')
+    if phase == 'opening':
+        filter_fn = lambda e: get_move_number(e["game"]) - 1 <= e['opening']
+    elif phase == 'middle':
+        filter_fn = lambda e: (get_move_number(e["game"]) - 1 > e['opening'] 
+                               and get_move_number(e["game"]) - 1 < e['end_phase'])
+    elif phase == 'end':
+        filter_fn = lambda e: get_move_number(e["game"]) - 1 >= e['end_phase']
+    else:
+        raise ValueError(f"Unknown phase: {phase}")
+    
+    dataset['test'] = ds['test'].filter(filter_fn)
+    dataset['train'] = ds['train'].filter(filter_fn)
+    dataset.save_to_disk(f'/workspace/datasets/{phase}/{master}')
 
-del dataset_opening
-gc.collect()
+import argparse
 
-# Middle game
-dataset_middle = {'test': None, 'train': None}
-dataset_middle['test'] = ds['test'].filter(lambda e: e["game_len"] > opening_phase and e["game_len"] < end_game)
-dataset_middle['train'] = ds['train'].filter(lambda e: e["game_len"] > opening_phase and e["game_len"] < end_game)
-dataset_middle = DatasetDict(dataset_middle)
-dataset_middle.save_to_disk('/workspace/datasets/middle')
-del dataset_middle
-gc.collect()
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--masters', nargs='+', required=True, help='Masters Name')
+    args = parser.parse_args()
+    
+    names = args.names
+    
+    for master in names:
+        try:
+            ds = load_dataset('ChessMoE/master_games_w_screenshots', master)
+            phase_generation(ds, master, 'opening')
+            phase_generation(ds, master, 'middle')
+            phase_generation(ds, master, 'end')
+            
+        except Exception:
+            pass 
 
-# End game
-dataset_end = {'test': None, 'train': None}
-dataset_end['test'] = ds['test'].filter(lambda e: e["game_len"] >= end_game)
-dataset_end['train'] = ds['train'].filter(lambda e: e["game_len"] >= end_game)
-dataset_end = DatasetDict(dataset_end)
-dataset_end.save_to_disk('/workspace/datasets/end')
-del dataset_end
-gc.collect()
+if __name__ == "__main__":
+    login(token=extract_token())
+    main()
