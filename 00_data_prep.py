@@ -43,7 +43,9 @@ def main():
         except Exception:
             pass
         
-    dataset.save_to_disk("/workspace/dataset")
+    dataset.filter(lambda e: e['phase'] == 'opening').save_to_disk("/workspace/dataset/opening")
+    dataset.filter(lambda e: e['phase'] == 'middle').save_to_disk("/workspace/dataset/middle")
+    dataset.filter(lambda e: e['phase'] == 'end').save_to_disk("/workspace/dataset/end")
 
 if __name__ == "__main__":
     login(token=extract_token())
