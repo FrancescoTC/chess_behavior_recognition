@@ -15,6 +15,7 @@ pgn2png/imagefolder_dataset/
 pgn2png/old/
 parquet/
 dataset/
+
 tocken.txt
 
 test.ipynb

@@ -1,53 +1,62 @@
-import gc
-
-from datasets import Dataset, DatasetDict, load_dataset
+import re
+from datasets import Dataset, DatasetDict, load_dataset, concatenate_datasets
 from huggingface_hub import login
+import argparse
 
-'''
-Divisione partite in base alla lunghezza
-Considerazioni: Se una partita contiene solo le prime due mosse, molto spesso sono mosse molto comuni
-                già dalla terza mossa in poi emerge una preferenza per alcune aperture basata sul tipo di giocatore
-                La fase di apertura finisce in genere tra la 10 e la 15 mossa ma può arrivare anche alla mossa n.20
-                Una partita arriva all'end game quando non ci sono più molti pezzi, il re non è in pericolo di matto
-                e i pedoni diventano i protagonisti della partita. Questo accade in genere dopo le 35/40 mosse.
-'''
-min_len = 3
-opening_phase = 15
-end_game = 35
+def extract_token():
+    file_path = 'token.txt'
+    with open(file_path, 'r') as f:
+        content = f.read()
+    
+    match = re.search(r'"(.*?)"', content)
+    if match:
+        return match.group(1)
+    else:
+        return None
 
-# hugging_face_token
+def save_split(dataset, phase):
+    data = {'test': None, 'train': None}
+    data['test'] = dataset['test'].filter(lambda e: e['phase'] == phase)
+    data['train'] = dataset['train'].filter(lambda e: e['phase'] == phase)
+    data = DatasetDict(data)
+    data.save_to_disk("/workspace/datasets/" + phase)
+    
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--masters', nargs='+', required=True, help='Masters Name')
+    args = parser.parse_args()
+    
+    dataset = {'test': None, 'train': None}
+    
+    
+    names = args.names
+    
+    for master in names:
+        try:
+            ds = load_dataset('ChessMoE/master_games_w_screenshots', master)
 
-# Carico il dataset
-ds = load_dataset('FrancescoTC/chess_game')
-
-print(ds)
-
-# Divido i dati in 3 parti diverse in base alla durata delle partite.
-
-# Opening Phase
-dataset_opening = {'test': None, 'train': None}
-dataset_opening['test'] = ds['test'].filter(lambda e: e["game_len"] <= opening_phase and e['game_len'] >= min_len)
-dataset_opening['train'] = ds['train'].filter(lambda e: e["game_len"] <= opening_phase and e['game_len'] >= min_len)
-dataset_opening = DatasetDict(dataset_opening)
-dataset_opening.save_to_disk('/workspace/datasets/opening')
-
-del dataset_opening
-gc.collect()
-
-# Middle game
-dataset_middle = {'test': None, 'train': None}
-dataset_middle['test'] = ds['test'].filter(lambda e: e["game_len"] > opening_phase and e["game_len"] < end_game)
-dataset_middle['train'] = ds['train'].filter(lambda e: e["game_len"] > opening_phase and e["game_len"] < end_game)
-dataset_middle = DatasetDict(dataset_middle)
-dataset_middle.save_to_disk('/workspace/datasets/middle')
-del dataset_middle
-gc.collect()
-
-# End game
-dataset_end = {'test': None, 'train': None}
-dataset_end['test'] = ds['test'].filter(lambda e: e["game_len"] >= end_game)
-dataset_end['train'] = ds['train'].filter(lambda e: e["game_len"] >= end_game)
-dataset_end = DatasetDict(dataset_end)
-dataset_end.save_to_disk('/workspace/datasets/end')
-del dataset_end
-gc.collect()
+            def add_player(e):
+                e['player'] = master
+                return e
+            
+            ds['test'] = ds['test'].map(add_player)
+            ds['train'] = ds['train'].map(add_player)
+            
+            if dataset['test'] == None:
+                dataset['test'] = ds['test']
+                dataset['train'] = ds['train']
+            else:
+                dataset['test'] = concatenate_datasets([dataset['test'], ds['test']])
+                dataset['train'] = concatenate_datasets([dataset['train'], ds['train']])
+                        
+        except Exception:
+            pass
+    
+    dataset = DatasetDict(dataset)
+    save_split(dataset, 'opening')
+    save_split(dataset, 'end')
+    save_split(dataset, 'middle')
+    
+if __name__ == "__main__":
+    login(token=extract_token())
+    main()
