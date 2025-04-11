@@ -1,6 +1,6 @@
 #!/bin/bash
 
-content=$(<file.txt)
+content=$(<token.txt)
 
 # the hf token is in "..."
 extracted=$(echo "$content" | grep -oP '"\K[^"]*')

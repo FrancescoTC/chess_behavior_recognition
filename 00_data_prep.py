@@ -29,7 +29,7 @@ def main():
     dataset = {'test': None, 'train': None}
     
     
-    names = args.names
+    names = args.masters
     
     for master in names:
         try:

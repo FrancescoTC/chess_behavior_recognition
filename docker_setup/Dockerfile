@@ -33,8 +33,8 @@ RUN pip3 install --upgrade mistral_common
 #ENTRYPOINT ["make", "-f", "/app/Makefile"]
 
 # Copy login script
-COPY login.sh /workspace/login.sh
-RUN chmod +x /workspace/login.sh
-ENTRYPOINT ["/workspace/login.sh"]
+# COPY login.sh /workspace/login.sh
+# RUN chmod +x /workspace/login.sh
+# ENTRYPOINT ["/workspace/login.sh"]
 # Back to default frontend
 ENV DEBIAN_FRONTEND=dialog
