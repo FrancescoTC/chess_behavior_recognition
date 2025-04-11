@@ -1,5 +1,8 @@
 from enum import Enum
 from datasets import Dataset, concatenate_datasets
+import csv
+
+masters_name_file = "masters_name.csv"
 
 class Split(Enum):
     '''
@@ -12,7 +15,21 @@ class Split(Enum):
     TRAIN = "train"
     TEST = "test"
 
+# def levels_to_smallest(dataset_location: str, split: Split):
+#     dataset_location = dataset_location + '/' + split.value
+#     ds = Dataset.load_from_disk(dataset_location)
+#     ds = ds.shuffle()
+#     return ds.select(range(10))
 
+def get_masters_name():
+    data = []
+    print(masters_name_file)
+    with open(masters_name_file, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            data.append(dict(row))
+            
+    return data
 
 def levels_to_smallest(dataset_location: str, split: Split):
     '''
@@ -32,17 +49,18 @@ def levels_to_smallest(dataset_location: str, split: Split):
     print(ds)
 
     # Take only the smallest number of sample for each masters
-    masters = ['Carlsen', 'Nakamura', 'Capablanca', 'Morphy', 'Fischer', 'Kasparov']
-    masters_ds = [None, None, None, None, None, None]
+    masters = get_masters_name()
+    masters_ds = [None] * len(masters)
     final_ds = None  # Initialize an empty dataset
 
     min_len = float("inf")  # Initialize with a very large number
 
     for i in range(len(masters)):
-        masters_ds[i] = ds.filter(lambda x: x["player"] == masters[i])
-        l = masters_ds[i].num_rows  
-        if l != 0:
+        masters_ds[i] = ds.filter(lambda x: x["player"] == masters[i]['name'])
+        l = masters_ds[i].num_rows 
+        if l > 0:
             min_len = min(min_len, l)  # Update min_len with the smallest dataset size
+        
 
     print(f"Only {min_len} samples for each master will be taken")  # Print the smallest dataset size found
 
@@ -54,4 +72,4 @@ def levels_to_smallest(dataset_location: str, split: Split):
             if len(masters_ds[i]) != 0:
                 final_ds = concatenate_datasets([final_ds, masters_ds[i].select(range(min_len))])  # Concatenate datasets
     
-    return final_ds
+    return final_ds.select(range(10))

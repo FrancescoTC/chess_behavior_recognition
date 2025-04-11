@@ -12,6 +12,7 @@ from trl import SFTTrainer, SFTConfig
 from transformers import TextStreamer
 
 import os
+import re
 import csv
 
 def extract_player_name(output):
@@ -36,7 +37,13 @@ def convert_to_conversation(sample):
     return { "messages" : conversation }
 pass
 
+def remove_special_characters(input_string):
+    # Use regex to replace special characters with an empty string
+    return re.sub(r'[^a-zA-Z0-9\s]', '', input_string)
+
 def evaluate(dataset, model, tokenizer, model_name):
+    
+    dataset = dataset.select(range(10))
     
     model.eval() # Set the model to evaluation mode
     correct, total = 0, 0
@@ -82,6 +89,7 @@ def evaluate(dataset, model, tokenizer, model_name):
             # Process the output to get the predicted player name
             predicted_player = tokenizer.decode(output[0], skip_special_tokens=True)
             predicted_player = extract_player_name(predicted_player)
+            predicted_player = remove_special_characters(predicted_player)
             print(predicted_player)
             # Compare the predicted player with the actual player
             actual_player = conversation['messages'][1]['content'][0]['text']  # Assuming this is the actual player name
