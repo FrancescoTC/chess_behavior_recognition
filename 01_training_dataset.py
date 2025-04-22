@@ -10,7 +10,7 @@ from train import DynamicDataset, convert_to_conversation
 import evaluating
 from dataset_handler import levels_to_smallest, Split
 
-dataset_dir = "pgn2png/datasets/"
+dataset_dir = "datasets/"
 model_dir = "models/"
 
 def main(model_name: str, short_name: str, phase: str):
@@ -55,10 +55,10 @@ def main(model_name: str, short_name: str, phase: str):
         data_collator = UnslothVisionDataCollator(model, tokenizer),
         train_dataset = dynamic_dataset,
         args = SFTConfig(
-            per_device_train_batch_size = 1,    # each GPUs processes 2 samples per step
-            gradient_accumulation_steps = 2,    # combines gradients from 4 batches before updating weights
-            warmup_steps = 1,                 # Warmup steps for stability
-            max_steps = 2,                   # Total optimization steps
+            per_device_train_batch_size = 5,    # each GPUs processes 2 samples per step
+            gradient_accumulation_steps = 10,    # combines gradients from 4 batches before updating weights
+            warmup_steps = 50,                 # Warmup steps for stability
+            max_steps = 500,                   # Total optimization steps
             # num_train_epochs = 3,
             learning_rate = 5e-5,               # Learning rate
             fp16 = not is_bf16_supported(),     # Uses 16-bit floating point (FP16) of BF16 is not supported

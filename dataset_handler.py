@@ -72,4 +72,4 @@ def levels_to_smallest(dataset_location: str, split: Split):
             if len(masters_ds[i]) != 0:
                 final_ds = concatenate_datasets([final_ds, masters_ds[i].select(range(min_len))])  # Concatenate datasets
     
-    return final_ds.select(range(10))
+    return final_ds

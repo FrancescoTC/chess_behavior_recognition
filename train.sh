@@ -5,4 +5,4 @@ pip3 install git+https://github.com/huggingface/transformers accelerate
 pip install qwen-vl-utils[decord]==0.0.8
 
 
-python3 01_training_dataset.py end 
+python3 01_training_dataset.py
