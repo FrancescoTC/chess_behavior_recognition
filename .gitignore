@@ -3,7 +3,7 @@ datasets/
 
 hugging_face_token.py
 
-model/
+models/
 outputs/
 unsloth_compiled_cache/
 __pycache__/
@@ -19,3 +19,5 @@ dataset/
 token.txt
 
 test.ipynb
+
+mergoo
